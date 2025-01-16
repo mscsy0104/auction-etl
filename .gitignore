@@ -1,0 +1,16 @@
+# tests
+tests/
+
+# results
+*.xlsx
+*.json
+*.csv
+
+# venv
+*_env
+
+# cache
+__pycache__
+
+# credentials
+.env
