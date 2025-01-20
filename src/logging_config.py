@@ -28,5 +28,6 @@ def setup_logging(log_file="etl-program.log"):
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
-
+    root_logger.name = __name__
+    
     logging.info("Logging is set up.")  # 초기화 확인 메시지

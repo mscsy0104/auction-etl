@@ -1,4 +1,5 @@
 from pymongo.collection import Collection
+from pymongo.database import Database
 from datetime import datetime
 import pytz
 
@@ -87,20 +88,6 @@ def update_documents(collection: Collection, filters: dict, documents: dict):
         return updated_ids
     except Exception as e:
         raise Exception(f"Error updating documents: {e}")
-# def update_documents(collection: Collection, filters: list, documents: list):
-#     """
-#     Update many documents in the collection.
-#     """
-#     try:
-#         updated_ids = []
-#         for filter in filters:
-#             for doc in documents:
-#                 oid = update_document(collection, filter, doc)
-#                 if oid != None:
-#                     updated_ids.append(oid)
-#         return updated_ids
-#     except Exception as e:
-#         raise Exception(f"Error updating documents: {e}")
 
 
 def update_matching_one(collection: Collection, filter: dict, document: dict):
@@ -140,3 +127,14 @@ def get_all_document_ids(collection: Collection):
         return document_ids
     except Exception as e:
         raise Exception(f"Error retrieving document IDs: {e}")
+    
+
+def get_collection_names(database: Database):
+    """
+    Get all document names from the specified collection.
+    """
+    try:
+        collection_names = database.list_collection_names
+        return collection_names
+    except Exception as e:
+        raise Exception(f"Error retrieving document names: {e}")

@@ -7,7 +7,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def main(upsert_data: list):
+def main(upsert_data: list, collection_name="seoul_auction_metadata"):
     try:
         # Initialize connection
         load_dotenv()
@@ -20,13 +20,12 @@ def main(upsert_data: list):
         # Access database and collection
         db_name = os.getenv("MONGO_DB")
         db = connection.get_database(db_name)
-        collection = db["seoul_auction_calendar"]
+        collection = db[collection_name]
 
         sale_numbers = [datum["SALE_NO"] for datum in upsert_data]
         # data를 순회하면서 SALE_NO가 있으면 업데이트
         #  없으면 insert 하는 걸로
-        documents = list(collection.find({}, {"_id":-1, "SALE_NO":-1}))
-        oid_salenum = {item['_id']: {'SALE_NO': item['SALE_NO']} for item in documents}
+        documents = list(collection.find({}, {"_id": -1, "SALE_NO": -1}))
 
         inserted_ids = []
         updated_ids = []
