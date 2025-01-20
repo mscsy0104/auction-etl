@@ -1,10 +1,8 @@
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, OperationFailure
-import os
-from dotenv import load_dotenv
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class MongoDBConnection:
@@ -23,7 +21,7 @@ class MongoDBConnection:
             self.client = MongoClient(self.uri)
             # Test connection
             self.client.admin.command("ping")
-            logging.info("MongoDB connection established successfully.")
+            logger.info("MongoDB connection established successfully.")
         except ConnectionFailure as e:
             raise Exception(f"MongoDB connection failed: {e}")
         except OperationFailure as e:
@@ -43,4 +41,4 @@ class MongoDBConnection:
         """
         if self.client:
             self.client.close()
-            logging.info("MongoDB connection closed.")
+            logger.info("MongoDB connection closed.")

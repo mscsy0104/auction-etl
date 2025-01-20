@@ -1,11 +1,7 @@
 from pymongo.collection import Collection
-from pymongo.database import Database
 from datetime import datetime
 import pytz
-import logging
-import traceback
 
-logging.basicConfig(level=logging.INFO)
 
 def make_timestamp():
     seoul_tz = pytz.timezone('Asia/Seoul')
@@ -69,26 +65,42 @@ def update_document(collection: Collection, filter: dict, document: dict):
         document['updated_at'] = current_time
         result = collection.update_one(filter, {"$set": document})
         if result.modified_count > 0:
-            oid = find_document(collection, filter)["_id"]
-            return oid
+            doc_to_find = find_document(collection, filter)
+            if doc_to_find:
+                oid = doc_to_find["_id"]
+                return oid
     except Exception as e:
         raise Exception(f"Error updating document: {e}")
     
 
-def update_documents(collection: Collection, filters: list, documents: list):
+def update_documents(collection: Collection, filters: dict, documents: dict):
     """
     Update many documents in the collection.
     """
     try:
         updated_ids = []
-        for filter in filters:
-            for doc in documents:
-                oid = update_document(collection, filter, doc)
-                if oid != None:
-                    updated_ids.append(oid)
+        keys = filters.keys()
+        for key in keys:
+            filter, doc = filters[key], documents[key]
+            updated_id = update_document(collection, filter, doc)
+            updated_ids.append(updated_id)
         return updated_ids
     except Exception as e:
         raise Exception(f"Error updating documents: {e}")
+# def update_documents(collection: Collection, filters: list, documents: list):
+#     """
+#     Update many documents in the collection.
+#     """
+#     try:
+#         updated_ids = []
+#         for filter in filters:
+#             for doc in documents:
+#                 oid = update_document(collection, filter, doc)
+#                 if oid != None:
+#                     updated_ids.append(oid)
+#         return updated_ids
+#     except Exception as e:
+#         raise Exception(f"Error updating documents: {e}")
 
 
 def update_matching_one(collection: Collection, filter: dict, document: dict):

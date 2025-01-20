@@ -5,7 +5,7 @@ from db.mongodb.operations import *
 import logging
 import traceback
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def main(upsert_data: list):
     try:
@@ -23,46 +23,69 @@ def main(upsert_data: list):
         collection = db["seoul_auction_calendar"]
 
         sale_numbers = [datum["SALE_NO"] for datum in upsert_data]
-        # data를 순회하면서 SALE_NO가 있으면 그거 업데이트
+        # data를 순회하면서 SALE_NO가 있으면 업데이트
         #  없으면 insert 하는 걸로
         documents = list(collection.find({}, {"_id":-1, "SALE_NO":-1}))
         oid_salenum = {item['_id']: {'SALE_NO': item['SALE_NO']} for item in documents}
-        inserted_ids = updated_ids = []
+
+        inserted_ids = []
+        updated_ids = []
+        sale_nums_to_update = []
+        sale_nums_to_insert = []
+
+        # mongodb에 documents 가 없는 경우(최초)
         if documents == []:
             inserted_ids = insert_documents(collection=collection, documents=upsert_data)
-
+            sale_nums_to_insert = sale_numbers.copy()
+        # mongodb에 documents 가 있는 경우
         else:
+            # update할 SALE_NO 추리기
             existed_sale_nums = [doc["SALE_NO"] for doc in documents]
-
-            update_sale_nums = []
-            insert_sale_nums = []
-            inserting_docs = updating_docs = []
             for number in sale_numbers:
                 if number in existed_sale_nums:
-                    update_sale_nums.append(number)
-            
-            insert_sale_nums = [num for num in sale_numbers if num not in update_sale_nums]
+                    sale_nums_to_update.append(number)
+            # insert할 SALE_NO 추리기
+            sale_nums_to_insert = [num for num in sale_numbers if num not in sale_nums_to_update]
 
-            inserting_docs = [doc for doc in upsert_data if doc["SALE_NO"] in insert_sale_nums]
-            updating_docs = [doc for doc in upsert_data if doc["SALE_NO"] in update_sale_nums]
+            # update, insert할 docs 추리기
+            docs_to_insert = [doc for doc in upsert_data if doc["SALE_NO"] in sale_nums_to_insert]
+            # docs_to_update = [doc for doc in upsert_data if doc["SALE_NO"] in sale_nums_to_update]
+            docs_to_update_dict = {doc["SALE_NO"]: doc for doc in upsert_data if doc["SALE_NO"] in sale_nums_to_update}
+            filters_to_update_dict = {doc["SALE_NO"]: {"SALE_NO": doc["SALE_NO"]} for doc in upsert_data if doc["SALE_NO"] in sale_nums_to_update}
+            # update_filters = [{"SALE_NO":num} for num in sale_nums_to_update]
 
+            updated_ids = update_documents(collection=collection, filters=filters_to_update_dict, documents=docs_to_update_dict)
+            # updated_ids = update_documents(collection=collection, filters=update_filters, documents=docs_to_update)
+            if docs_to_insert != []:
+                inserted_ids = insert_documents(collection=collection, documents=docs_to_insert)
 
-            update_filters = [{"SALE_NO":num} for num in update_sale_nums]
-            updated_ids = update_documents(collection=collection, filters=update_filters, documents=updating_docs)
-            if inserting_docs != []:
-                inserted_ids = insert_documents(collection=collection, documents=inserting_docs)
+        # 로깅 메시지 템플릿
+        log_template = """
+        {separator}
+        Inserted IDs(count: {inserted_ids_count}): {inserted_ids}
+        Updated IDs(count: {updated_ids_count}): {updated_ids}
+        Inserted SALE_NO(count: {inserted_salenums_count}): {sale_nums_to_insert}
+        Updated SALE_NO(count: {updated_salenums_count}): {sale_nums_to_update}
+        {separator}
+        Upserted Well!
+        {separator}
+        """
 
-        logging.info("-"*50)
-        logging.info(f"Inserted IDs: {inserted_ids}")
-        logging.info(f"Updated IDs: {updated_ids}")
-        # logging.info(f"Inserted SALE_NO: {}")
-        # logging.info(f"Updated SALE_NO: {}")
+        # 로깅 출력
+        logger.info(log_template.format(
+            separator="-" * 50,
+            inserted_ids=inserted_ids,
+            inserted_ids_count = len(inserted_ids),
+            updated_ids=updated_ids,
+            updated_ids_count=len(updated_ids),
+            sale_nums_to_insert=sale_nums_to_insert,
+            inserted_salenums_count=len(sale_nums_to_insert),
+            sale_nums_to_update=sale_nums_to_update,
+            updated_salenums_count=len(sale_nums_to_update),
+        ))
 
-        logging.info("Upserted Well!")
-        logging.info("-"*50)
-
-        # logging.info(f"Upserted ID: {upserted_id}")
+        # logger.info(f"Upserted ID: {upserted_id}")
     except Exception as e:
-        logging.info(f"Error: {traceback.format_exc()}")
+        logger.info(f"Error: {traceback.format_exc()}")
     finally:
         connection.close()

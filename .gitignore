@@ -5,6 +5,7 @@ tests/
 *.xlsx
 *.json
 *.csv
+*.log
 
 # venv
 *_env
