@@ -1,20 +1,18 @@
 import requests as req
 import json
-from .utils.api_endpoints import get_online_url, get_major_url
+from .utils.api_endpoints import get_auction_api_url
+import logging
 
+logger = logging.getLogger(__name__)
 
-def main(auction_code: int, auction_type='online'):
-    if auction_type == 'online':
-        url = get_online_url(auction_code=auction_code)
-    elif auction_type == 'major':
-        url = get_major_url(auction_code=auction_code)
-
-    res = req.get(url)
+def main(auction_type: str, auction_code: int):
+    try:
+        api_url = get_auction_api_url(auction_type=auction_type, auction_code=auction_code)
+    except Exception as e:
+        logger.error(f"Failed to get auction API URL for auction_code: {auction_code}, auction_type: {auction_type}. Error: {e}")
+        
+    res = req.get(api_url)
     count = json.loads(res.text)['data']['cnt']
-    if count:
-        result = {
-            "SALE_NO": auction_code,
-            "SALE_KIND_CD": auction_type,
-            "cnt": int(count)
-        }
-        return result
+    if not count:
+        return 0
+    return count
