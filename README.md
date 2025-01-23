@@ -33,8 +33,9 @@
 
 [➡️ 프로젝트 일지 확인하러 가기](https://slime-walnut-8b4.notion.site/17dc620b13a5801d8eafde9d65012abc?pvs=4)
 
-<img width="760" alt="Screenshot 2025-01-24 at 12 21 34 AM" src="https://github.com/user-attachments/assets/f4622922-15d7-4864-8a0a-096b8e2edf74" />
-
+<p aligne="center">
+<img src="./readme_imgs/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EC%9D%BC%EC%A7%80.png" width="60%" height="50%">
+</p>
 
 프로젝트 진행 중 기록되는 주요 내용은 다음과 같습니다: 
 
